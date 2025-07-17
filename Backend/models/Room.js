@@ -65,5 +65,13 @@ export default {
       return await MongoRoom.deleteOne(query);
     }
     return await inMemoryRoomModel.deleteOne(query);
+  },
+
+  async find(query) {
+    if (mongoose.connection.readyState === 1) {
+      return await MongoRoom.find(query);
+    }
+    // For in-memory storage, simulate find with select and sort
+    return [];
   }
 };

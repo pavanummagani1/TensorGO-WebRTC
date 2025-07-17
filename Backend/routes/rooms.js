@@ -1,5 +1,5 @@
 import express from 'express';
-import Room from '../models/Room.js';
+import RoomModel from '../models/Room.js';
 import { generateRoomId } from '../utils/helpers.js';
 
 const router = express.Router();
@@ -15,14 +15,12 @@ router.post('/create', async (req, res) => {
 
     const roomId = generateRoomId();
     
-    const room = new Room({
+    const room = await RoomModel.create({
       roomId,
       createdBy,
       participants: []
     });
 
-    await room.save();
-    
     res.json({ 
       success: true, 
       roomId, 
@@ -39,7 +37,7 @@ router.get('/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
     
-    const room = await Room.findOne({ roomId, isActive: true });
+    const room = await RoomModel.findOne({ roomId, isActive: true });
     
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
@@ -63,7 +61,7 @@ router.get('/:roomId', async (req, res) => {
 // Get active rooms (for admin/debugging purposes)
 router.get('/', async (req, res) => {
   try {
-    const rooms = await Room.find({ isActive: true })
+    const rooms = await RoomModel.find({ isActive: true })
       .select('roomId participantCount createdAt')
       .sort({ createdAt: -1 })
       .limit(10);

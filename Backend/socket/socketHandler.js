@@ -1,4 +1,4 @@
-import Room from '../models/Room.js';
+import RoomModel from '../models/Room.js';
 
 export const handleSocketConnection = (socket, io) => {
   console.log(`User connected: ${socket.id}`);
@@ -14,7 +14,7 @@ export const handleSocketConnection = (socket, io) => {
       }
 
       // Find room in database
-      const room = await Room.findOne({ roomId, isActive: true });
+      const room = await RoomModel.findOne({ roomId, isActive: true });
       
       if (!room) {
         socket.emit('error', { message: 'Room not found' });
@@ -35,7 +35,11 @@ export const handleSocketConnection = (socket, io) => {
         socketId: socket.id,
         userId: userId
       });
-      await room.save();
+      await RoomModel.findOneAndUpdate(
+        { roomId },
+        { participants: room.participants },
+        { new: true }
+      );
 
       console.log(`User ${userId} joined room ${roomId}`);
 
@@ -118,15 +122,19 @@ export const handleSocketConnection = (socket, io) => {
       
       if (socket.roomId) {
         // Remove from database
-        const room = await Room.findOne({ roomId: socket.roomId });
+        const room = await RoomModel.findOne({ roomId: socket.roomId });
         if (room) {
           room.participants = room.participants.filter(p => p.socketId !== socket.id);
           
           // Delete room if no participants left
           if (room.participants.length === 0) {
-            await Room.deleteOne({ roomId: socket.roomId });
+            await RoomModel.deleteOne({ roomId: socket.roomId });
           } else {
-            await room.save();
+            await RoomModel.findOneAndUpdate(
+              { roomId: socket.roomId },
+              { participants: room.participants },
+              { new: true }
+            );
           }
         }
 
@@ -147,14 +155,18 @@ export const handleSocketConnection = (socket, io) => {
     try {
       if (socket.roomId) {
         // Remove from database
-        const room = await Room.findOne({ roomId: socket.roomId });
+        const room = await RoomModel.findOne({ roomId: socket.roomId });
         if (room) {
           room.participants = room.participants.filter(p => p.socketId !== socket.id);
           
           if (room.participants.length === 0) {
-            await Room.deleteOne({ roomId: socket.roomId });
+            await RoomModel.deleteOne({ roomId: socket.roomId });
           } else {
-            await room.save();
+            await RoomModel.findOneAndUpdate(
+              { roomId: socket.roomId },
+              { participants: room.participants },
+              { new: true }
+            );
           }
         }
 
